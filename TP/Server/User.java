@@ -1,57 +1,68 @@
 package Server;
 
-import java.util.concurrent.locks.ReentrantLock;
+import java.io.*;
+import java.util.concurrent.locks.*;
 
 public class User {
     private String username;
     private String password;
-    final ReentrantLock lock;
+    private final ReadWriteLock rwLock;
 
     User() {
         this.username = null;
         this.password = null;
-        this.lock = new ReentrantLock();
+        this.rwLock = new ReentrantReadWriteLock();
     }
 
     User(String username, String password) {
         this.username = username;
         this.password = password;
-        this.lock = new ReentrantLock();
+        this.rwLock = new ReentrantReadWriteLock();
     }
 
     public void setUsername(String username) {
         try {
-            this.lock.lock();
+            this.rwLock.writeLock().lock();
             this.username = username;
         } finally {
-            this.lock.unlock();
+            this.rwLock.writeLock().unlock();
         }
     }
 
     public void setPassword(String password) {
         try {
-            this.lock.lock();
+            this.rwLock.writeLock().lock();
             this.password = password;
         } finally {
-            this.lock.unlock();
+            this.rwLock.writeLock().unlock();
         }
     }
 
     public String getUsername() {
         try {
-            this.lock.lock();
+            this.rwLock.readLock().lock();
             return this.username;
         } finally {
-            this.lock.unlock();
+            this.rwLock.readLock().unlock();
         }
     }
 
     public String getPassword() {
         try {
-            this.lock.lock();
+            this.rwLock.readLock().lock();
             return this.password;
         } finally {
-            this.lock.unlock();
+            this.rwLock.readLock().unlock();
         }
+    }
+
+    // @TODO
+    public void serialize(DataOutputStream out) throws IOException {
+
+    }
+
+    // @TODO
+    public User deserialize(DataInputStream in) throws IOException {
+
     }
 }

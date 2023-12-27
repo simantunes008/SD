@@ -1,43 +1,42 @@
 package Server;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.*;
+import java.util.concurrent.locks.*;
 
 public class DataBase {
-    private final Map<String, User> Users;
-    final ReentrantLock lock;
+    private final Map<String, User> users;
+    private final ReentrantReadWriteLock rwLock;
 
-    DataBase() {
-        this.Users = new HashMap<String, User>();
-        this.lock = new ReentrantLock();
+    public DataBase() {
+        this.users = new HashMap<>();
+        this.rwLock = new ReentrantReadWriteLock();
     }
 
     public boolean isUser(String username) {
         try {
-            this.lock.lock();
-            return this.Users.containsKey(username);
+            this.rwLock.readLock().lock();
+            return this.users.containsKey(username);
         } finally {
-            this.lock.unlock();
+            this.rwLock.readLock().unlock();
         }
     }
 
     public boolean authenticateUser(String username, String password) {
         try {
-            this.lock.lock();
-            User user = this.Users.get(username);
-            return user.getPassword().equals(password);
+            this.rwLock.readLock().lock();
+            User user = this.users.get(username);
+            return user != null && user.getPassword().equals(password);
         } finally {
-            this.lock.unlock();
+            this.rwLock.readLock().unlock();
         }
     }
 
-    public void setUsers(String username, User user) {
+    public void putUser(String username, User user) {
         try {
-            this.lock.lock();
-            this.Users.put(username, user);
+            this.rwLock.writeLock().lock();
+            this.users.put(username, user);
         } finally {
-            this.lock.unlock();
+            this.rwLock.writeLock().unlock();
         }
     }
 }

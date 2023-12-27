@@ -2,9 +2,7 @@ package Client;
 
 import java.net.*;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 
 public class Client {
     private final Socket socket;
@@ -20,32 +18,27 @@ public class Client {
     }
 
     public void start() {
+        System.out.println("Escolha uma opção:");
+        System.out.println("1. Registrar");
+        System.out.println("2. Autenticar");
+        System.out.println("3. Enviar pedido de tarefa");
+        System.out.println("4. Consultar memória disponível");
+        System.out.print("Opção: ");
+
         String str;
 
-        System.out.print("Escolha uma opção:\n1. Registrar\n2. Autenticar\nOpção: ");
-
         try {
+            login();
+
+            System.out.print("Opção: ");
             while ((str = userInput.readLine()) != null) {
-                out.writeUTF(str);
 
-                if (str.equals("1")) {
-                    if (registerUser(userInput, out, in)) {
-                        System.out.println("Registro concluído com sucesso!");
-                    } else {
-                        System.out.println("Erro: Username já existe.");
-                    }
-                } else if (str.equals("2")) {
-                    if (authenticateUser(userInput, out, in)) {
-                        System.out.println("Autenticação concluída com sucesso!");
-
-                        while ((str = userInput.readLine()) != null) {
-                            out.writeUTF(str);
-
-                            pedido(userInput, out, in);
-                        }
-                    } else {
-                        System.out.println("Erro: Username ou password inválidos.");
-                    }
+                if (str.equals("3")) {
+                    out.writeInt(Integer.parseInt(str));
+                    request();
+                } else if (str.equals("4")) {
+                    out.writeInt(Integer.parseInt(str));
+                    System.out.println("Memória disponível: " + in.readInt());
                 } else {
                     System.out.println("Opção inválida.");
                 }
@@ -61,45 +54,93 @@ public class Client {
         }
     }
 
-    private static void pedido(BufferedReader userInput, DataOutputStream out, DataInputStream in) throws IOException {
-        System.out.print("Insira path do arquivo (ou 'stop' para parar): ");
+    private void login() {
+        String str;
+
+        try {
+            while ((str = userInput.readLine()) != null) {
+
+                if (str.equals("1")) {
+                    out.writeInt(Integer.parseInt(str));
+
+                    System.out.print("Insira um username: ");
+                    str = userInput.readLine();
+                    out.writeUTF(str);
+
+                    System.out.print("Insira uma password: ");
+                    str = userInput.readLine();
+                    out.writeUTF(str);
+
+                    if (in.readBoolean()) {
+                        System.out.print("\033[H\033[2J");
+                        System.out.flush();
+                        System.out.println("Resgistro concluído com sucesso!");
+                    } else {
+                        System.out.print("\033[H\033[2J");
+                        System.out.flush();
+                        System.out.println("Erro: Username já existe");
+                    }
+                } else if (str.equals("2")) {
+                    out.writeInt(Integer.parseInt(str));
+
+                    System.out.print("Insira o seu username: ");
+                    str = userInput.readLine();
+                    out.writeUTF(str);
+
+                    System.out.print("Insira a sua password: ");
+                    str = userInput.readLine();
+                    out.writeUTF(str);
+
+                    if(in.readBoolean()) {
+                        System.out.print("\033[H\033[2J");
+                        System.out.flush();
+                        System.out.println("Autenticação concluída com sucesso!");
+                        break;
+                    } else {
+                        System.out.print("\033[H\033[2J");
+                        System.out.flush();
+                        System.out.println("Erro: Username ou password inválidos.");
+                    }
+                } else if (str.equals("3") || str.equals("4") || str.equals("5")) {
+                    System.out.print("\033[H\033[2J");
+                    System.out.flush();
+                    System.out.println("É necessário autenticar-se.");
+                } else {
+                    System.out.print("\033[H\033[2J");
+                    System.out.flush();
+                    System.out.println("Opção inválida.");
+                }
+
+                System.out.print("Opção: ");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void request() throws IOException {
+        System.out.print("Insira path do arquivo: ");
         String str = userInput.readLine();
+
         System.out.print("Insira tamanho do pedido: ");
         int memory = Integer.parseInt(userInput.readLine());
 
         Path path = Paths.get(str);
         byte[] job = Files.readAllBytes(path);
+
         out.writeInt(job.length);
         out.write(job);
         out.writeInt(memory);
 
-        byte[] output = new byte[in.readInt()];
-        in.readFully(output);
-        System.err.println("success, returned "+output.length+" bytes");
-
-    }
-
-    private static boolean authenticateUser(BufferedReader userInput, DataOutputStream out, DataInputStream in) throws IOException {
-        System.out.print("Insira o seu username: ");
-        String username = userInput.readLine();
-        System.out.print("Insira a sua password: ");
-        String password = userInput.readLine();
-
-        out.writeUTF(username);
-        out.writeUTF(password);
-
-        return in.readBoolean();
-    }
-
-    private static boolean registerUser(BufferedReader userInput, DataOutputStream out, DataInputStream in) throws IOException {
-        System.out.print("Insira um username: ");
-        String username = userInput.readLine();
-        System.out.print("Insira uma password: ");
-        String password = userInput.readLine();
-
-        out.writeUTF(username);
-        out.writeUTF(password);
-
-        return in.readBoolean();
+        if (in.readBoolean()) {
+            byte[] output = new byte[in.readInt()];
+            in.readFully(output);
+            System.err.println("success, returned " + output.length + " bytes");
+        } else {
+            int errorCode = in.readInt();
+            String errorMessage = in.readUTF();
+            System.err.println("job failed: code=" + errorCode + " message=" + errorMessage);
+        }
     }
 }
