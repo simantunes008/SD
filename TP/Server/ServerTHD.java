@@ -7,13 +7,15 @@ import sd23.*;
 public class ServerTHD extends Thread {
     private final DataBase dataBase;
     private final MemoryManager memoryManager;
+    private final TaskManager taskManager;
     private final Socket socket;
     private final DataInputStream in;
     private final DataOutputStream out;
 
-    public ServerTHD(Socket clientSocket, DataBase dataBase, MemoryManager memoryManager) throws IOException {
+    public ServerTHD(Socket clientSocket, DataBase dataBase, MemoryManager memoryManager, TaskManager taskManager) throws IOException {
         this.socket = clientSocket;
         this.memoryManager = memoryManager;
+        this.taskManager = taskManager;
         this.dataBase = dataBase;
         this.in = new DataInputStream(socket.getInputStream());
         this.out = new DataOutputStream(socket.getOutputStream());
@@ -55,25 +57,26 @@ public class ServerTHD extends Thread {
                         out.writeBoolean(dataBase.authenticateUser(username, password));
                     }
                     case 3 -> {
-                        byte[] job = new byte[in.readInt()];
-                        in.readFully(job);
-                        int memory = in.readInt();
+                        Task task = new Task();
+                        task = task.deserialize(in);
 
+                        byte[] job = task.getJob();
+                        int memory = task.getMemory();
+
+                        taskManager.incrementPendingTasks();
                         try {
                             memoryManager.allocateMemory(memory);
-
                             try {
                                 byte[] output = JobFunction.execute(job);
-
                                 out.writeBoolean(true);
                                 out.writeInt(output.length);
                                 out.write(output);
+
                             } catch (JobFunctionException e) {
                                 out.writeBoolean(false);
                                 out.writeInt(e.getCode());
                                 out.writeUTF(e.getMessage());
                             }
-
                             memoryManager.releaseMemory(memory);
 
                         } catch (IllegalArgumentException e) {
@@ -81,12 +84,13 @@ public class ServerTHD extends Thread {
                             out.writeInt(0);
                             out.writeUTF(e.getMessage());
                         }
+                        taskManager.decrementPendingTasks();
                     }
                     case 4 -> {
                         out.writeInt(memoryManager.getSystemMemory());
                     }
                     case 5 -> {
-
+                        out.writeInt(taskManager.getPendingTasks());
                     }
                 }
             }

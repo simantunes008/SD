@@ -1,6 +1,7 @@
 package Client;
 
 import Server.User;
+import Server.Task;
 
 import java.net.*;
 import java.io.*;
@@ -36,17 +37,24 @@ public class Client {
             System.out.print("Opção: ");
             while ((str = userInput.readLine()) != null) {
 
-                if (str.equals("3")) {
-                    out.writeInt(Integer.parseInt(str));
-                    request();
-                } else if (str.equals("4")) {
-                    out.writeInt(Integer.parseInt(str));
-                    System.out.println("Memória disponível: " + in.readInt());
-                } else if (str.equals("5")) {
-                    out.writeInt(Integer.parseInt(str));
-
-                } else {
-                    System.out.println("Opção inválida.");
+                switch (str) {
+                    case "3" -> {
+                        out.writeInt(Integer.parseInt(str));
+                        request();
+                    }
+                    case "4" -> {
+                        out.writeInt(Integer.parseInt(str));
+                        System.out.print("\033[H\033[2J");
+                        System.out.flush();
+                        System.out.println("Memória disponível: " + in.readInt());
+                    }
+                    case "5" -> {
+                        out.writeInt(Integer.parseInt(str));
+                        System.out.print("\033[H\033[2J");
+                        System.out.flush();
+                        System.out.println("Número de tarefas pendentes: " + in.readInt());
+                    }
+                    default -> System.out.println("Opção inválida.");
                 }
 
                 System.out.print("Opção: ");
@@ -66,59 +74,65 @@ public class Client {
         String password;
 
         try {
+            label:
             while ((str = userInput.readLine()) != null) {
 
-                if (str.equals("1")) {
-                    out.writeInt(Integer.parseInt(str));
+                switch (str) {
+                    case "1" -> {
+                        out.writeInt(Integer.parseInt(str));
 
-                    System.out.print("Insira um username: ");
-                    username = userInput.readLine();
+                        System.out.print("Insira um username: ");
+                        username = userInput.readLine();
 
-                    System.out.print("Insira uma password: ");
-                    password = userInput.readLine();
+                        System.out.print("Insira uma password: ");
+                        password = userInput.readLine();
 
-                    User user = new User(username, password);
-                    user.serialize(out);
+                        User user = new User(username, password);
+                        user.serialize(out);
 
-                    if (in.readBoolean()) {
-                        System.out.print("\033[H\033[2J");
-                        System.out.flush();
-                        System.out.println("Resgistro concluído com sucesso!");
-                    } else {
-                        System.out.print("\033[H\033[2J");
-                        System.out.flush();
-                        System.out.println("Erro: Username já existe");
+                        if (in.readBoolean()) {
+                            System.out.print("\033[H\033[2J");
+                            System.out.flush();
+                            System.out.println("Resgistro concluído com sucesso!");
+                        } else {
+                            System.out.print("\033[H\033[2J");
+                            System.out.flush();
+                            System.out.println("Erro: Username já existe");
+                        }
                     }
-                } else if (str.equals("2")) {
-                    out.writeInt(Integer.parseInt(str));
+                    case "2" -> {
+                        out.writeInt(Integer.parseInt(str));
 
-                    System.out.print("Insira o seu username: ");
-                    username = userInput.readLine();
+                        System.out.print("Insira o seu username: ");
+                        username = userInput.readLine();
 
-                    System.out.print("Insira a sua password: ");
-                    password = userInput.readLine();
+                        System.out.print("Insira a sua password: ");
+                        password = userInput.readLine();
 
-                    User user = new User(username, password);
-                    user.serialize(out);
+                        User user = new User(username, password);
+                        user.serialize(out);
 
-                    if (in.readBoolean()) {
-                        System.out.print("\033[H\033[2J");
-                        System.out.flush();
-                        System.out.println("Autenticação concluída com sucesso!");
-                        break;
-                    } else {
-                        System.out.print("\033[H\033[2J");
-                        System.out.flush();
-                        System.out.println("Erro: Username ou password inválidos.");
+                        if (in.readBoolean()) {
+                            System.out.print("\033[H\033[2J");
+                            System.out.flush();
+                            System.out.println("Autenticação concluída com sucesso!");
+                            break label;
+                        } else {
+                            System.out.print("\033[H\033[2J");
+                            System.out.flush();
+                            System.out.println("Erro: Username ou password inválidos.");
+                        }
                     }
-                } else if (str.equals("3") || str.equals("4") || str.equals("5")) {
-                    System.out.print("\033[H\033[2J");
-                    System.out.flush();
-                    System.out.println("É necessário autenticar-se.");
-                } else {
-                    System.out.print("\033[H\033[2J");
-                    System.out.flush();
-                    System.out.println("Opção inválida.");
+                    case "3", "4", "5" -> {
+                        System.out.print("\033[H\033[2J");
+                        System.out.flush();
+                        System.out.println("É necessário autenticar-se.");
+                    }
+                    default -> {
+                        System.out.print("\033[H\033[2J");
+                        System.out.flush();
+                        System.out.println("Opção inválida.");
+                    }
                 }
 
                 System.out.print("Opção: ");
@@ -139,18 +153,21 @@ public class Client {
         Path path = Paths.get(str);
         byte[] job = Files.readAllBytes(path);
 
-        out.writeInt(job.length);
-        out.write(job);
-        out.writeInt(memory);
+        Task task = new Task(job, memory);
+        task.serialize(out);
 
         if (in.readBoolean()) {
             byte[] output = new byte[in.readInt()];
             in.readFully(output);
-            System.out.println("success, returned " + output.length + " bytes!");
+            System.out.print("\033[H\033[2J");
+            System.out.flush();
+            System.out.println("Success, returned " + output.length + " bytes!");
         } else {
             int errorCode = in.readInt();
             String errorMessage = in.readUTF();
-            System.out.println("job failed: code=" + errorCode + " message=" + errorMessage);
+            System.out.print("\033[H\033[2J");
+            System.out.flush();
+            System.out.println("Job failed: code = " + errorCode + " message = " + errorMessage);
         }
     }
 }

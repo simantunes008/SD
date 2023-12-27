@@ -7,12 +7,14 @@ import java.util.*;
 public class Server {
     private final DataBase dataBase;
     private final MemoryManager memoryManager;
+    private final TaskManager taskManager;
     private final ServerSocket serverSocket;
     List<ServerTHD> threads;
 
     public Server(int port) throws IOException {
         this.dataBase = new DataBase();
         this.memoryManager = new MemoryManager(1024);
+        this.taskManager = new TaskManager();
         this.serverSocket = new ServerSocket(port);
         this.threads = new ArrayList<>();
     }
@@ -21,7 +23,7 @@ public class Server {
         try {
             while (true) {
                 Socket socket = serverSocket.accept();
-                ServerTHD handler = new ServerTHD(socket, dataBase, memoryManager);
+                ServerTHD handler = new ServerTHD(socket, dataBase, memoryManager, taskManager);
 
                 threads.add(handler);
                 handler.start();
