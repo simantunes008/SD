@@ -32,11 +32,12 @@ public class ServerTHD extends Thread {
 
                 switch (request) {
                     case 1 -> {
-                        String username = in.readUTF();
-                        String password = in.readUTF();
+                        User user = new User();
+                        user = user.deserialize(in);
+
+                        String username = user.getUsername();
 
                         if (!dataBase.isUser(username)) {
-                            User user = new User(username, password);
                             dataBase.putUser(username, user);
                             out.writeBoolean(true);
                         } else {
@@ -45,8 +46,11 @@ public class ServerTHD extends Thread {
 
                     }
                     case 2 -> {
-                        String username = in.readUTF();
-                        String password = in.readUTF();
+                        User user = new User();
+                        user = user.deserialize(in);
+
+                        String username = user.getUsername();
+                        String password = user.getPassword();
 
                         out.writeBoolean(dataBase.authenticateUser(username, password));
                     }
@@ -80,6 +84,9 @@ public class ServerTHD extends Thread {
                     }
                     case 4 -> {
                         out.writeInt(memoryManager.getSystemMemory());
+                    }
+                    case 5 -> {
+
                     }
                 }
             }

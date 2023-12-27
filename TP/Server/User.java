@@ -8,13 +8,13 @@ public class User {
     private String password;
     private final ReadWriteLock rwLock;
 
-    User() {
+    public User() {
         this.username = null;
         this.password = null;
         this.rwLock = new ReentrantReadWriteLock();
     }
 
-    User(String username, String password) {
+    public User(String username, String password) {
         this.username = username;
         this.password = password;
         this.rwLock = new ReentrantReadWriteLock();
@@ -56,13 +56,14 @@ public class User {
         }
     }
 
-    // @TODO
     public void serialize(DataOutputStream out) throws IOException {
-
+        out.writeUTF(this.username);
+        out.writeUTF(this.password);
     }
 
-    // @TODO
     public User deserialize(DataInputStream in) throws IOException {
-
+        String username = in.readUTF();
+        String password = in.readUTF();
+        return new User(username, password);
     }
 }

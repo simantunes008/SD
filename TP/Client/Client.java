@@ -1,5 +1,7 @@
 package Client;
 
+import Server.User;
+
 import java.net.*;
 import java.io.*;
 import java.nio.file.*;
@@ -23,6 +25,7 @@ public class Client {
         System.out.println("2. Autenticar");
         System.out.println("3. Enviar pedido de tarefa");
         System.out.println("4. Consultar memória disponível");
+        System.out.println("5. Consultar fila de espera");
         System.out.print("Opção: ");
 
         String str;
@@ -39,6 +42,9 @@ public class Client {
                 } else if (str.equals("4")) {
                     out.writeInt(Integer.parseInt(str));
                     System.out.println("Memória disponível: " + in.readInt());
+                } else if (str.equals("5")) {
+                    out.writeInt(Integer.parseInt(str));
+
                 } else {
                     System.out.println("Opção inválida.");
                 }
@@ -56,6 +62,8 @@ public class Client {
 
     private void login() {
         String str;
+        String username;
+        String password;
 
         try {
             while ((str = userInput.readLine()) != null) {
@@ -64,12 +72,13 @@ public class Client {
                     out.writeInt(Integer.parseInt(str));
 
                     System.out.print("Insira um username: ");
-                    str = userInput.readLine();
-                    out.writeUTF(str);
+                    username = userInput.readLine();
 
                     System.out.print("Insira uma password: ");
-                    str = userInput.readLine();
-                    out.writeUTF(str);
+                    password = userInput.readLine();
+
+                    User user = new User(username, password);
+                    user.serialize(out);
 
                     if (in.readBoolean()) {
                         System.out.print("\033[H\033[2J");
@@ -84,14 +93,15 @@ public class Client {
                     out.writeInt(Integer.parseInt(str));
 
                     System.out.print("Insira o seu username: ");
-                    str = userInput.readLine();
-                    out.writeUTF(str);
+                    username = userInput.readLine();
 
                     System.out.print("Insira a sua password: ");
-                    str = userInput.readLine();
-                    out.writeUTF(str);
+                    password = userInput.readLine();
 
-                    if(in.readBoolean()) {
+                    User user = new User(username, password);
+                    user.serialize(out);
+
+                    if (in.readBoolean()) {
                         System.out.print("\033[H\033[2J");
                         System.out.flush();
                         System.out.println("Autenticação concluída com sucesso!");
@@ -136,11 +146,11 @@ public class Client {
         if (in.readBoolean()) {
             byte[] output = new byte[in.readInt()];
             in.readFully(output);
-            System.err.println("success, returned " + output.length + " bytes");
+            System.out.println("success, returned " + output.length + " bytes!");
         } else {
             int errorCode = in.readInt();
             String errorMessage = in.readUTF();
-            System.err.println("job failed: code=" + errorCode + " message=" + errorMessage);
+            System.out.println("job failed: code=" + errorCode + " message=" + errorMessage);
         }
     }
 }
