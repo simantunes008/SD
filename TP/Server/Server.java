@@ -23,10 +23,10 @@ public class Server {
         try {
             while (true) {
                 Socket socket = serverSocket.accept();
-                ServerTHD handler = new ServerTHD(socket, dataBase, memoryManager, taskManager);
+                ServerTHD serverTHD = new ServerTHD(socket, dataBase, memoryManager, taskManager);
 
-                threads.add(handler);
-                handler.start();
+                threads.add(serverTHD);
+                serverTHD.start();
             }
         } catch (IOException e) {
             e.printStackTrace();

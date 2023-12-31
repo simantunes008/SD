@@ -86,19 +86,16 @@ public class ServerTHD extends Thread {
                         }
                         taskManager.decrementPendingTasks();
                     }
-                    case 4 -> {
-                        out.writeInt(memoryManager.getSystemMemory());
-                    }
-                    case 5 -> {
-                        out.writeInt(taskManager.getPendingTasks());
-                    }
+                    case 4 -> out.writeInt(memoryManager.getSystemMemory());
+                    case 5 -> out.writeInt(taskManager.getPendingTasks());
                 }
             }
 
             socket.shutdownOutput();
             socket.shutdownInput();
+            socket.close();
 
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
