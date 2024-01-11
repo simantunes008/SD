@@ -11,9 +11,9 @@ public class Server {
     private final ServerSocket serverSocket;
     List<ServerTHD> threads;
 
-    public Server(int port) throws IOException {
+    public Server(int port, int memory) throws IOException {
         this.dataBase = new DataBase();
-        this.memoryManager = new MemoryManager(1024);
+        this.memoryManager = new MemoryManager(memory);
         this.taskManager = new TaskManager();
         this.serverSocket = new ServerSocket(port);
         this.threads = new ArrayList<>();
