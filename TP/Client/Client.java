@@ -6,7 +6,7 @@ import Server.Task;
 import java.io.*;
 import java.net.*;
 
-public class Client {
+public class Client implements IClient {
     private final Socket socket;
     private final DataInputStream in;
     private final DataOutputStream out;
@@ -32,7 +32,7 @@ public class Client {
         return authenticated;
     }
 
-    byte[] request(Task task) throws IOException {
+    public byte[] request(Task task) throws IOException {
         if (authenticated) {
             out.writeInt(3);
 

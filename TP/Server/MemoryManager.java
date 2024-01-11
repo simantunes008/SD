@@ -45,7 +45,7 @@ public class MemoryManager {
         try {
             rwLock.writeLock().lock();
             systemMemory += releasedMemory;
-            memoryAvailable.signal();
+            memoryAvailable.signalAll();
         } finally {
             rwLock.writeLock().unlock();
         }

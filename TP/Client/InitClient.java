@@ -5,9 +5,9 @@ import java.io.IOException;
 public class InitClient {
     public static void main(String[] args) {
         try {
-            Client client = new Client("localhost", 12345);
-            ClientInterface clientInterface = new ClientInterface(client);
-            clientInterface.start();
+            Client client = new Client("localhost", 9090); // Port number is arbitrary
+            ClientUI clientUI = new ClientUI(client);
+            clientUI.start();
         } catch (IOException e) {
             e.printStackTrace();
         }

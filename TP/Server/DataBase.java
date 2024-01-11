@@ -12,12 +12,17 @@ public class DataBase {
         this.rwLock = new ReentrantReadWriteLock();
     }
 
-    public boolean isUser(String username) {
+    public boolean newUser(String username, User user) {
         try {
-            this.rwLock.readLock().lock();
-            return this.users.containsKey(username);
+            this.rwLock.writeLock().lock();
+            if (!this.users.containsKey(username)) {
+                this.users.put(username, user);
+                return true;
+            } else {
+                return false;
+            }
         } finally {
-            this.rwLock.readLock().unlock();
+            this.rwLock.writeLock().unlock();
         }
     }
 
@@ -28,15 +33,6 @@ public class DataBase {
             return user != null && user.getPassword().equals(password);
         } finally {
             this.rwLock.readLock().unlock();
-        }
-    }
-
-    public void putUser(String username, User user) {
-        try {
-            this.rwLock.writeLock().lock();
-            this.users.put(username, user);
-        } finally {
-            this.rwLock.writeLock().unlock();
         }
     }
 }

@@ -39,13 +39,7 @@ public class ServerTHD extends Thread {
 
                         String username = user.getUsername();
 
-                        if (!dataBase.isUser(username)) {
-                            dataBase.putUser(username, user);
-                            out.writeBoolean(true);
-                        } else {
-                            out.writeBoolean(false);
-                        }
-
+                        out.writeBoolean(dataBase.newUser(username, user));
                     }
                     case 2 -> {
                         User user = new User();
