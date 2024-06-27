@@ -6,35 +6,27 @@ class Bank {
 
   private static class Account {
     private int balance;
+    private ReentrantLock lock = new ReentrantLock();
     Account(int balance) { this.balance = balance; }
     int balance() { return balance; }
     boolean deposit(int value) {
+      lock.lock();
       balance += value;
+      lock.unlock();
       return true;
     }
   }
 
   // Our single account, for now
   private Account savings = new Account(0);
-  private ReentrantLock lock = new ReentrantLock();
 
   // Account balance
   public int balance() {
-    lock.lock();
-    try {
-      return savings.balance();
-    } finally {
-      lock.unlock();
-    }
+    return savings.balance();
   }
 
   // Deposit
   boolean deposit(int value) {
-    lock.lock();
-    try {
-      return savings.deposit(value);
-    } finally {
-      lock.unlock();
-    }
+    return savings.deposit(value);
   }
 }
