@@ -1,4 +1,4 @@
-package ex2;
+package ex1_2;
 
 import java.util.*;
 import java.util.concurrent.locks.Condition;
@@ -7,8 +7,6 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Warehouse {
     private Map<String, Product> map =  new HashMap<String, Product>();
     private ReentrantLock lock = new ReentrantLock();
-    private int ticket = 0;
-    private int turn = 0;
 
     private class Product {
         int quantity = 0;
@@ -39,8 +37,7 @@ public class Warehouse {
         boolean flag = true;
         try {
             lock.lock();
-            int myTicket = ticket++;
-            while (flag || myTicket != turn) {
+            while (flag) {
                 int size = items.size();
                 int counter = 0;
                 for (String s : items) {
@@ -55,9 +52,9 @@ public class Warehouse {
                 if (counter == size)
                     flag = false;
             }
-            for (String s : items)
+            for (String s : items) {
                 System.out.println(s + " quantity: " + --get(s).quantity);
-            turn++;
+            }
         } finally {
             lock.unlock();
         }

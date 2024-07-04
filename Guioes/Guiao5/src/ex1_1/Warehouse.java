@@ -1,4 +1,4 @@
-package ex2;
+package ex1_1;
 
 import java.util.*;
 import java.util.concurrent.locks.Condition;
@@ -7,8 +7,6 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Warehouse {
     private Map<String, Product> map =  new HashMap<String, Product>();
     private ReentrantLock lock = new ReentrantLock();
-    private int ticket = 0;
-    private int turn = 0;
 
     private class Product {
         int quantity = 0;
@@ -27,8 +25,11 @@ public class Warehouse {
         try {
             lock.lock();
             Product p = get(item);
-            p.quantity += quantity;
-            p.c.signalAll();
+            if (p.quantity == 0) {
+                p.quantity += quantity;
+                p.c.signalAll();
+            } else
+                p.quantity += quantity;
             System.out.println(item + " quantity: " + p.quantity);
         } finally {
             lock.unlock();
@@ -36,28 +37,16 @@ public class Warehouse {
     }
 
     public void consume(Set<String> items) throws InterruptedException {
-        boolean flag = true;
         try {
             lock.lock();
-            int myTicket = ticket++;
-            while (flag || myTicket != turn) {
-                int size = items.size();
-                int counter = 0;
-                for (String s : items) {
-                    Product p = get(s);
-                    if (p.quantity == 0) {
-                        System.out.println("Waiting for item: " + s);
-                        p.c.await();
-                        break;
-                    }
-                    counter++;
+            for (String s : items) {
+                Product p = get(s);
+                while (p.quantity == 0) {
+                    System.out.println("Waiting for item: " + s);
+                    p.c.await();
                 }
-                if (counter == size)
-                    flag = false;
+                System.out.println(s + " quantity: " + --p.quantity);
             }
-            for (String s : items)
-                System.out.println(s + " quantity: " + --get(s).quantity);
-            turn++;
         } finally {
             lock.unlock();
         }
